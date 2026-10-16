@@ -29,7 +29,7 @@ export function storyboardToText(board) {
     `Style: ${STYLES[settings.style]?.label ?? settings.style} · Genre: ${GENRES[settings.genre]?.label ?? settings.genre} · Aspect ratio: ${settings.aspectRatio} · Language: ${settings.language}`,
     `Scenes: ${scenes.length} · Total: ${formatTime(total)} (${total}s)`,
     settings.characterDescription ? `Character consistency: ${settings.characterDescription}` : null,
-    'Template-generated storyboard and prompts. StoryMotion Studio does not render videos.',
+    'Template-generated storyboard and prompts (not written by an AI model).',
   ].filter(Boolean);
   return [header.join('\n'), ...scenes.map(sceneToText)].join('\n\n');
 }

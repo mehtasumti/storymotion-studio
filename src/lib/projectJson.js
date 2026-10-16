@@ -2,8 +2,10 @@ import {
   ASPECT_RATIOS, DEFAULT_SETTINGS, DURATIONS, GENRES, LANGUAGES, LIMITS,
   MAX_SCENE_DURATION, MIN_SCENE_DURATION, SCENE_COUNTS, STYLES, createId, recalculateTimeline,
 } from './storyEngine.js';
+import { sanitizeVideoSettings } from './video/videoModel.js';
 
-export const SCHEMA_VERSION = 1;
+/** v2 adds the optional `video` block (image/audio references, captions, motion). v1 files still import. */
+export const SCHEMA_VERSION = 2;
 export const APP_ID = 'storymotion-studio';
 export const MAX_IMPORT_BYTES = 2_000_000;
 export const MAX_SCENES = 30;
@@ -102,6 +104,7 @@ export function validateProjectData(data) {
       settings: sanitizeSettings(data.settings),
       scenes,
       meta: sanitizeMeta(data.meta),
+      video: sanitizeVideoForScenes(data.video, scenes),
       updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : new Date().toISOString(),
     },
   };
@@ -119,8 +122,24 @@ export function parseProject(text) {
   return validateProjectData(data);
 }
 
-export function buildProject({ settings, scenes, meta }) {
-  return { schemaVersion: SCHEMA_VERSION, app: APP_ID, settings, scenes, meta: meta ?? null, updatedAt: new Date().toISOString() };
+/** Keeps only video entries for scenes that exist. Images/audio themselves are not in the JSON. */
+export function sanitizeVideoForScenes(rawVideo, scenes) {
+  const video = sanitizeVideoSettings(rawVideo);
+  const ids = new Set(scenes.map((s) => s.id));
+  video.scenes = Object.fromEntries(Object.entries(video.scenes).filter(([id]) => ids.has(id)));
+  return video;
+}
+
+export function buildProject({ settings, scenes, meta, video }) {
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    app: APP_ID,
+    settings,
+    scenes,
+    meta: meta ?? null,
+    video: video ?? null,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 export function serializeProject(project) {

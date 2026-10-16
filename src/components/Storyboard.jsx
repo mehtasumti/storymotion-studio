@@ -1,4 +1,4 @@
-import { Check, FileJson, FileText, Info, LoaderCircle, RotateCcw, Scale, TriangleAlert, Upload } from 'lucide-react';
+import { Check, Clapperboard, FileJson, Film, FileText, Info, LoaderCircle, RotateCcw, Scale, TriangleAlert, Upload } from 'lucide-react';
 import CopyButton from './CopyButton.jsx';
 import SceneCard from './SceneCard.jsx';
 import Timeline from './Timeline.jsx';
@@ -24,6 +24,9 @@ export default function Storyboard({
   onExportPdf,
   onImportClick,
   onReset,
+  view = 'storyboard',
+  onViewChange,
+  videoPanel,
 }) {
   const { settings, scenes } = board;
   const total = sumDurations(scenes);
@@ -88,6 +91,44 @@ export default function Storyboard({
         </div>
       </div>
 
+      <div className="view-switch" role="tablist" aria-label="Workspace">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'storyboard'}
+          className={`view-tab${view === 'storyboard' ? ' is-active' : ''}`}
+          onClick={() => onViewChange?.('storyboard')}
+        >
+          <Clapperboard size={16} aria-hidden="true" />
+          Storyboard
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'video'}
+          className={`view-tab${view === 'video' ? ' is-active' : ''}`}
+          onClick={() => onViewChange?.('video')}
+          data-testid="tab-video"
+        >
+          <Film size={16} aria-hidden="true" />
+          Video maker
+        </button>
+      </div>
+
+      {settingsChanged && (
+        <div className="notice notice-warning">
+          <TriangleAlert size={18} aria-hidden="true" />
+          <p>
+            Your form settings differ from this storyboard. Click <strong>Generate Storyboard</strong> to apply them.
+            This replaces the current scenes (images and audio are kept by scene position).
+          </p>
+        </div>
+      )}
+
+      {view === 'video' ? (
+        videoPanel
+      ) : (
+        <>
       <div className="notice notice-info">
         <Info size={18} aria-hidden="true" />
         <p>
@@ -99,16 +140,6 @@ export default function Storyboard({
             : 'Every scene comes from your own story text. Review and refine the prompts before using them.'}
         </p>
       </div>
-
-      {settingsChanged && (
-        <div className="notice notice-warning">
-          <TriangleAlert size={18} aria-hidden="true" />
-          <p>
-            Your form settings differ from this storyboard. Click <strong>Generate Storyboard</strong> to apply them.
-            This replaces the current scenes.
-          </p>
-        </div>
-      )}
 
       <Timeline scenes={scenes} target={target} onSelect={jumpToScene} />
 
@@ -161,6 +192,8 @@ export default function Storyboard({
           </li>
         ))}
       </ol>
+        </>
+      )}
     </section>
   );
 }

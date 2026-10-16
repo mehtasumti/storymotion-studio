@@ -1,6 +1,7 @@
 import { APP_ID, SCHEMA_VERSION, sanitizeSettings, validateProjectData } from './projectJson.js';
 
-export const STORAGE_KEY = `storymotion-studio:project:v${SCHEMA_VERSION}`;
+// Fixed key (not tied to SCHEMA_VERSION) so projects saved by older versions still load.
+export const STORAGE_KEY = 'storymotion-studio:project:v1';
 const BACKUP_KEY = `${STORAGE_KEY}:corrupt-backup`;
 const UNAVAILABLE =
   'Browser storage is unavailable (private browsing or blocked site data). Your work will not survive a reload — use Export JSON to keep it.';
@@ -58,11 +59,16 @@ export function loadState() {
       settings: data.settings || data.draft || {},
       scenes: data.scenes,
       meta: data.meta,
+      video: data.video,
     });
     if (!result.ok) return quarantine(storage, raw);
-    board = { settings: result.project.settings, scenes: result.project.scenes, meta: result.project.meta };
+    board = { settings: result.project.settings, scenes: result.project.scenes, meta: result.project.meta, video: result.project.video };
   }
-  const ui = { lockTotal: data.ui?.lockTotal !== false, hasEdits: data.ui?.hasEdits === true };
+  const ui = {
+    lockTotal: data.ui?.lockTotal !== false,
+    hasEdits: data.ui?.hasEdits === true,
+    view: data.ui?.view === 'video' ? 'video' : 'storyboard',
+  };
   return { ok: true, state: { draft, board, ui, updatedAt: data.updatedAt } };
 }
 
@@ -75,6 +81,7 @@ export function saveState({ draft, board, ui }) {
     settings: board?.settings ?? null,
     scenes: board?.scenes ?? [],
     meta: board?.meta ?? null,
+    video: board?.video ?? null,
     draft,
     ui,
     updatedAt: new Date().toISOString(),

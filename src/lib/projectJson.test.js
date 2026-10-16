@@ -33,6 +33,33 @@ describe('project JSON', () => {
     expect(result.project.meta).toEqual(board.meta);
   });
 
+  it('round-trips video settings and drops entries for unknown scenes', () => {
+    const board = generateStoryboard(detailed);
+    const [s0] = board.scenes;
+    board.video = {
+      scenes: {
+        [s0.id]: { imageId: 'm-img1', motion: 'pan-left', caption: 'Custom', narration: { id: 'm-n1', name: 'n.wav', duration: 2, volume: 0.8, offset: 0.5 } },
+        'not-a-scene': { imageId: 'm-x' },
+      },
+      captions: { size: 'large', style: 'outline' },
+      music: { id: 'm-mus', name: 'm.mp3', duration: 30, loop: false },
+    };
+    const result = parseProject(serializeProject(buildProject(board)));
+    expect(result.ok).toBe(true);
+    const v = result.project.video;
+    expect(Object.keys(v.scenes)).toEqual([s0.id]);
+    expect(v.scenes[s0.id]).toMatchObject({ imageId: 'm-img1', motion: 'pan-left', caption: 'Custom' });
+    expect(v.scenes[s0.id].narration).toMatchObject({ id: 'm-n1', volume: 0.8, offset: 0.5 });
+    expect(v.captions).toMatchObject({ size: 'large', style: 'outline', enabled: true });
+    expect(v.music).toMatchObject({ id: 'm-mus', loop: false });
+  });
+
+  it('still imports version 1 files without a video block', () => {
+    const result = parseProject(wrap([validScene()], { schemaVersion: 1 }));
+    expect(result.ok).toBe(true);
+    expect(result.project.video.scenes).toEqual({});
+  });
+
   it('rejects malformed JSON and wrong shapes', () => {
     expect(parseProject('{not json').ok).toBe(false);
     expect(parseProject('[]').ok).toBe(false);

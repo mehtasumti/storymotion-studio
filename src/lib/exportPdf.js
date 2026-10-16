@@ -116,7 +116,7 @@ export function exportStoryboardPdf(board, { save = true } = {}) {
   if (settings.characterDescription) field('Character consistency', settings.characterDescription);
 
   write(
-    'Template-generated storyboard and prompts. StoryMotion Studio does not render videos. Review and edit prompts before using them in external tools, which may have their own usage charges.',
+    'Template-generated storyboard and prompts (not written by an AI model). Review and edit prompts before using them in external tools, which may have their own usage charges. Videos made in StoryMotion Studio are animated still images, not AI-generated video.',
     { size: 8.5, style: 'italic', color: COLORS.muted, after: 4 },
   );
 
@@ -153,7 +153,7 @@ export function exportStoryboardPdf(board, { save = true } = {}) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...COLORS.muted);
-    doc.text('Template-generated prompts · StoryMotion Studio does not render videos', margin, pageH - 8);
+    doc.text('Template-generated prompts · StoryMotion Studio', margin, pageH - 8);
     doc.text(`Page ${p} of ${pages}`, pageW - margin, pageH - 8, { align: 'right' });
   }
 

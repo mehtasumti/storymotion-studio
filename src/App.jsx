@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDown, Check, Clapperboard, Film, Info, ShieldCheck, TriangleAlert, Upload, X } from 'lucide-react';
 import StoryForm from './components/StoryForm.jsx';
 import Storyboard from './components/Storyboard.jsx';
@@ -25,6 +25,12 @@ import {
   serializeProject,
 } from './lib/projectJson.js';
 import { DEMO_PRESETS } from './lib/demoPresets.js';
+import { carryMediaByPosition, defaultVideoSettings, referencedMediaIds } from './lib/video/videoModel.js';
+import { clearAllMedia, pruneMedia } from './lib/video/mediaStore.js';
+import { forgetAllMedia } from './lib/video/mediaFiles.js';
+import { forgetAiData } from './lib/video/aiImages.js';
+
+const VideoStudio = lazy(() => import('./components/video/VideoStudio.jsx'));
 
 const FIELD_FOCUS_IDS = {
   title: 'title-input',
@@ -88,6 +94,7 @@ export default function App() {
   const [board, setBoard] = useState(() => boot.state?.board ?? null);
   const [lockTotal, setLockTotal] = useState(() => boot.state?.ui?.lockTotal ?? true);
   const [hasEdits, setHasEdits] = useState(() => boot.state?.ui?.hasEdits ?? false);
+  const [view, setView] = useState(() => (boot.state?.ui?.view === 'video' && boot.state?.board ? 'video' : 'storyboard'));
   const [errors, setErrors] = useState({});
   const [generating, setGenerating] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
@@ -110,9 +117,19 @@ export default function App() {
     if (boot.reason === 'corrupted') announce(boot.error, 'warning');
   }, [boot, announce]);
 
+  // Remove images/audio left behind by older sessions (never touches media the project uses).
+  useEffect(() => {
+    const bootTime = Date.now();
+    const timer = setTimeout(() => {
+      // Use the project as it is now, and only remove files from before this page load.
+      pruneMedia(referencedMediaIds(latestRef.current?.board?.video), { createdBefore: bootTime }).catch(() => {});
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Debounced autosave to localStorage.
   useEffect(() => {
-    latestRef.current = { draft: form, board, ui: { lockTotal, hasEdits } };
+    latestRef.current = { draft: form, board, ui: { lockTotal, hasEdits, view } };
     const timer = setTimeout(() => {
       const result = saveState(latestRef.current);
       if (result.ok) {
@@ -124,7 +141,7 @@ export default function App() {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [form, board, lockTotal, hasEdits]);
+  }, [form, board, lockTotal, hasEdits, view]);
 
   // Flush on tab close / app switch so the last keystrokes are kept.
   useEffect(() => {
@@ -175,10 +192,20 @@ export default function App() {
     setTimeout(() => {
       try {
         const result = generateStoryboard(form);
+        let kept = 0;
+        if (board?.video) {
+          // Keep uploaded images/audio by scene position; free media for scenes that no longer exist.
+          const video = carryMediaByPosition(board.video, board.scenes, result.scenes);
+          kept = Object.values(video.scenes).filter((m) => m.imageId).length;
+          const keep = referencedMediaIds(video);
+          const dropped = [...referencedMediaIds(board.video)].filter((id) => !keep.has(id));
+          if (dropped.length) pruneMedia(keep, { createdBefore: Date.now() }).catch(() => {});
+          result.video = video;
+        }
         setBoard(result);
         setHasEdits(false);
         announce(
-          `Storyboard generated: ${result.scenes.length} scenes, ${sumDurations(result.scenes)} seconds.`,
+          `Storyboard generated: ${result.scenes.length} scenes, ${sumDurations(result.scenes)} seconds.${kept ? ` Kept ${kept} scene image${kept === 1 ? '' : 's'} by position.` : ''}`,
           'success',
         );
         focusById('storyboard-heading');
@@ -199,6 +226,10 @@ export default function App() {
       prev ? { ...prev, scenes: prev.scenes.map((s) => (s.id === sceneId ? { ...s, [field]: safe } : s)) } : prev,
     );
     setHasEdits(true);
+  }, []);
+
+  const handleVideoChange = useCallback((updater) => {
+    setBoard((prev) => (prev ? { ...prev, video: updater(prev.video ?? defaultVideoSettings()) } : prev));
   }, []);
 
   const handleDurationChange = useCallback(
@@ -239,7 +270,12 @@ export default function App() {
         'application/json',
       );
       setHasEdits(false);
-      announce('JSON project exported. Keep it as a backup — you can re-import it any time.', 'success');
+      announce(
+        board.video
+          ? 'JSON project exported. It includes video settings and captions, but not your images or audio files — keep those files too.'
+          : 'JSON project exported. Keep it as a backup — you can re-import it any time.',
+        'success',
+      );
     } catch (err) {
       console.error(err);
       announce('JSON export failed. Please try again.', 'error');
@@ -293,8 +329,8 @@ export default function App() {
       return;
     }
     if (board && hasEdits && !window.confirm('Importing will replace your current edited storyboard. Continue?')) return;
-    const { settings, scenes, meta } = result.project;
-    setBoard({ settings, scenes, meta });
+    const { settings, scenes, meta, video } = result.project;
+    setBoard({ settings, scenes, meta, video });
     setForm({ ...settings });
     setHasEdits(false);
     setErrors({});
@@ -304,10 +340,14 @@ export default function App() {
 
   function handleReset() {
     const message = hasEdits
-      ? 'Reset will permanently clear your story, settings and edited storyboard from this browser. You have edits that have not been exported.\n\nContinue?'
-      : 'Reset will clear your story, settings and storyboard from this browser.\n\nContinue?';
+      ? 'Reset will permanently clear your story, settings, edited storyboard, and all images and audio added in the Video maker from this browser. You have edits that have not been exported.\n\nContinue?'
+      : 'Reset will clear your story, settings, storyboard, and all images and audio added in the Video maker from this browser.\n\nContinue?';
     if (!window.confirm(message)) return;
     clearState();
+    forgetAllMedia();
+    forgetAiData();
+    clearAllMedia().catch(() => {});
+    setView('storyboard');
     setForm({ ...DEFAULT_SETTINGS });
     setBoard(null);
     setHasEdits(false);
@@ -343,7 +383,7 @@ export default function App() {
             </span>
             <span className="brand-name">StoryMotion Studio</span>
           </a>
-          <span className="header-badge">Free Storyboard &amp; Prompt Creator</span>
+          <span className="header-badge">Free Storyboard &amp; Video Maker</span>
           <button
             type="button"
             className="btn btn-ghost btn-sm header-import"
@@ -362,9 +402,13 @@ export default function App() {
           <p className="eyebrow">Your story. Every scene. Ready to create.</p>
           <h1 id="hero-title">Turn your story into cinematic scenes.</h1>
           <p className="hero-sub">
-            Paste a story and get an editable, timed storyboard with image prompts, image-to-video animation prompts,
-            camera moves, audio notes and transitions — ready to use in Runway, Kling or any tool you like.{' '}
-            <strong>StoryMotion Studio prepares storyboards and prompts. It does not render videos.</strong>
+            Paste a story and get an editable, timed storyboard with image prompts, animation prompts, camera moves,
+            audio notes and transitions. Then add an image per scene, music and voice, and export a video right in your
+            browser.{' '}
+            <strong>
+              StoryMotion videos are animated still images (camera moves, transitions, captions, audio), not AI-generated
+              video: characters do not move on their own.
+            </strong>
           </p>
           <div className="hero-actions">
             <button type="button" className="btn btn-primary btn-lg" onClick={() => focusById('story-input')}>
@@ -376,7 +420,7 @@ export default function App() {
             <li><Check size={15} aria-hidden="true" />No sign-in</li>
             <li><Check size={15} aria-hidden="true" />Runs in your browser</li>
             <li><Check size={15} aria-hidden="true" />₹0 — no paid APIs</li>
-            <li><Check size={15} aria-hidden="true" />Prompts, not rendered videos</li>
+            <li><Check size={15} aria-hidden="true" />Animated stills, not AI video</li>
           </ul>
         </section>
 
@@ -413,6 +457,19 @@ export default function App() {
             onExportPdf={handleExportPdf}
             onImportClick={openImport}
             onReset={handleReset}
+            view={view}
+            onViewChange={setView}
+            videoPanel={
+              <Suspense
+                fallback={
+                  <p className="muted small" role="status">
+                    Loading the video maker…
+                  </p>
+                }
+              >
+                <VideoStudio board={board} onVideoChange={handleVideoChange} />
+              </Suspense>
+            }
           />
         ) : (
           <EmptyState onImport={openImport} />
@@ -424,14 +481,17 @@ export default function App() {
           <p>
             <ShieldCheck size={18} aria-hidden="true" />
             <span>
-              <strong>Privacy:</strong> your story is processed entirely in this browser. There is no backend, no
-              account and no tracking. Projects are saved in this browser’s local storage — clearing browser data
-              erases them, so export JSON backups of work you care about.
+              <strong>Privacy:</strong> your story, images and audio are processed entirely in this browser, and
+              videos are rendered on your device. There is no backend, no account and no tracking. Projects, images and
+              audio are saved in this browser’s storage — clearing browser data erases them, so export JSON backups and
+              keep your original files. If you turn on optional AI images, only the scene image prompts are sent to
+              Pollinations, a third-party service, when you click Generate.
             </span>
           </p>
           <p className="small">
-            StoryMotion Studio prepares storyboards and prompts using templates; it does not render videos and is not
-            an AI model. External tools such as Runway or Kling have their own pricing and usage charges.
+            StoryMotion Studio writes storyboards and prompts with templates (it is not an AI model) and makes animated
+            still-image videos in your browser. It does not generate AI video or character motion. External tools such
+            as Runway, Kling or Pollinations have their own terms, limits and charges.
           </p>
         </div>
       </footer>
