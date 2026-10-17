@@ -1,0 +1,14 @@
+// Cloudflare Workers static-assets deployment (free plan). No Worker script, no backend:
+// Cloudflare serves the files in ./dist directly. `name` must match the existing Worker.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "storymotion-studio",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./dist",
+    // /privacy -> /privacy/ (served from privacy/index.html)
+    "html_handling": "auto-trailing-slash",
+    // Unknown paths get dist/404.html with a real 404 status.
+    "not_found_handling": "404-page"
+  }
+}

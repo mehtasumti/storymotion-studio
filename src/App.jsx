@@ -1,6 +1,9 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDown, Check, Clapperboard, Film, Info, ShieldCheck, TriangleAlert, Upload, X } from 'lucide-react';
+import {
+  ArrowDown, Check, Clapperboard, Film, Info, LoaderCircle, MessageSquare, Play, ShieldCheck, TriangleAlert, Upload, X,
+} from 'lucide-react';
 import StoryForm from './components/StoryForm.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Storyboard from './components/Storyboard.jsx';
 import { AnnounceContext } from './components/CopyButton.jsx';
 import {
@@ -29,6 +32,8 @@ import { carryMediaByPosition, defaultVideoSettings, referencedMediaIds } from '
 import { clearAllMedia, pruneMedia } from './lib/video/mediaStore.js';
 import { forgetAllMedia } from './lib/video/mediaFiles.js';
 import { forgetAiData } from './lib/video/aiImages.js';
+import { DEMO_SETTINGS, attachDemoImages, buildDemoBoard } from './lib/demoProject.js';
+import { SITE } from './config.js';
 
 const VideoStudio = lazy(() => import('./components/video/VideoStudio.jsx'));
 
@@ -70,7 +75,7 @@ function focusById(id) {
   });
 }
 
-function EmptyState({ onImport }) {
+function EmptyState({ onImport, onOpenDemo, demoLoading }) {
   return (
     <section className="empty-state" aria-labelledby="empty-heading">
       <Film size={30} aria-hidden="true" />
@@ -80,10 +85,17 @@ function EmptyState({ onImport }) {
         <li>Pick style, genre, scene count, duration and aspect ratio.</li>
         <li>Click <strong>Generate Storyboard</strong>, then edit, copy and export.</li>
       </ol>
-      <button type="button" className="btn btn-ghost" onClick={onImport}>
-        <Upload size={16} aria-hidden="true" />
-        Import a saved JSON project
-      </button>
+      <div className="btn-row empty-actions">
+        <button type="button" className="btn btn-primary" onClick={onOpenDemo} disabled={demoLoading}>
+          {demoLoading ? <LoaderCircle size={16} className="spin" aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          {demoLoading ? 'Loading demo project…' : 'Open the demo project'}
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={onImport}>
+          <Upload size={16} aria-hidden="true" />
+          Import a saved JSON project
+        </button>
+      </div>
+      <p className="small">The demo is a six-scene mystery with sample images already added, so you can try the Video maker straight away.</p>
     </section>
   );
 }
@@ -98,6 +110,7 @@ export default function App() {
   const [errors, setErrors] = useState({});
   const [generating, setGenerating] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [saveInfo, setSaveInfo] = useState({ status: 'idle' });
   const [storageIssue, setStorageIssue] = useState(boot.reason === 'unavailable' ? boot.error : null);
   const [toast, setToast] = useState(null);
@@ -367,7 +380,77 @@ export default function App() {
     focusById('story-input');
   }
 
+  async function handleOpenDemoProject({ fromLink = false } = {}) {
+    if (demoLoading) return;
+    const hasWork = Boolean(board) || Boolean(form.story.trim());
+    if (
+      hasWork &&
+      !window.confirm(
+        fromLink
+          ? 'Open the demo project?\n\nIt replaces the story, storyboard, images and audio currently in this browser. Export JSON first if you want to keep them.'
+          : 'Load the demo project?\n\nIt replaces the story, storyboard, images and audio currently in this browser. Export JSON first if you want to keep them.',
+      )
+    ) {
+      if (fromLink) announce('Demo not opened. Your current project is unchanged.');
+      return;
+    }
+    setDemoLoading(true);
+    const startedAt = Date.now();
+    try {
+      const { importImage } = await import('./lib/video/mediaFiles.js');
+      const result = await attachDemoImages(buildDemoBoard(), { importImage });
+      // The old project's images/audio are no longer referenced; free that space.
+      pruneMedia(referencedMediaIds(result.board.video), { createdBefore: startedAt }).catch(() => {});
+      forgetAllMedia();
+      setBoard(result.board);
+      setForm({ ...DEFAULT_SETTINGS, ...DEMO_SETTINGS });
+      setErrors({});
+      setHasEdits(false);
+      setView('video');
+      if (result.attached === 0) {
+        announce(
+          'Demo storyboard loaded, but the sample images could not be added (offline, or browser storage is blocked). You can still explore the storyboard and add your own images.',
+          'warning',
+        );
+      } else if (result.failed) {
+        announce(`Demo loaded with ${result.attached} of ${result.attached + result.failed} sample images. Add the rest from your own files.`, 'warning');
+      } else {
+        announce('Demo project loaded: 6 scenes with sample images. Press play on the preview, then try changing camera moves or captions.', 'success');
+      }
+      focusById('storyboard-heading');
+    } catch (err) {
+      console.error(err);
+      announce('The demo project could not be loaded. Check your connection and try again.', 'error');
+    } finally {
+      setDemoLoading(false);
+    }
+  }
+
+  // /app/?demo=1 (from the landing page) opens the demo project once, then cleans the URL.
+  const demoLinkHandled = useRef(false);
+  useEffect(() => {
+    if (demoLinkHandled.current) return;
+    demoLinkHandled.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('demo')) return;
+    params.delete('demo');
+    const query = params.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+    handleOpenDemoProject({ fromLink: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const ToastIcon = toast ? TOAST_ICONS[toast.type] || Info : null;
+  const urgentToast = toast && (toast.type === 'error' || toast.type === 'warning');
+  const toastNode = toast && (
+    <div key={toast.id} className={`toast toast-${toast.type}`}>
+      <ToastIcon size={18} aria-hidden="true" />
+      <p>{toast.text}</p>
+      <button type="button" className="toast-close" onClick={() => setToast(null)} aria-label="Dismiss message">
+        <X size={16} aria-hidden="true" />
+      </button>
+    </div>
+  );
 
   return (
     <AnnounceContext.Provider value={announce}>
@@ -377,13 +460,31 @@ export default function App() {
 
       <header className="site-header" id="top">
         <div className="container header-inner">
-          <a className="brand" href="#top">
+          <a className="brand" href="/" aria-label="StoryMotion Studio home page">
             <span className="brand-mark" aria-hidden="true">
               <Clapperboard size={20} />
             </span>
             <span className="brand-name">StoryMotion Studio</span>
           </a>
-          <span className="header-badge">Free Storyboard &amp; Video Maker</span>
+          <span className="header-badge">Beta</span>
+          <nav className="header-nav" aria-label="Site">
+            <a href="/">Home</a>
+            <a href="/privacy/">Privacy</a>
+            <a href="/terms/">Terms</a>
+          </nav>
+          {SITE.feedbackFormUrl && (
+            <a
+              className="btn btn-ghost btn-sm header-feedback"
+              href={SITE.feedbackFormUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Send feedback (opens a Google Form in a new tab)"
+            >
+              <MessageSquare size={16} aria-hidden="true" />
+              <span className="hide-sm">Feedback</span>
+              <span className="sr-only"> (opens a Google Form in a new tab)</span>
+            </a>
+          )}
           <button
             type="button"
             className="btn btn-ghost btn-sm header-import"
@@ -398,24 +499,36 @@ export default function App() {
       </header>
 
       <main className="container">
-        <section className="hero" aria-labelledby="hero-title">
-          <p className="eyebrow">Your story. Every scene. Ready to create.</p>
+        <section className="hero hero-compact" aria-labelledby="hero-title">
+          <p className="eyebrow">Studio · public beta</p>
           <h1 id="hero-title">Turn your story into cinematic scenes.</h1>
           <p className="hero-sub">
-            Paste a story and get an editable, timed storyboard with image prompts, animation prompts, camera moves,
-            audio notes and transitions. Then add an image per scene, music and voice, and export a video right in your
-            browser.{' '}
+            Write a story, generate a timed storyboard, then add an image per scene, music and voice, and export a video
+            in your browser.{' '}
             <strong>
-              StoryMotion videos are animated still images (camera moves, transitions, captions, audio), not AI-generated
-              video: characters do not move on their own.
+              Videos are animated still images (camera moves, transitions, captions and audio), not AI-generated video.
+              Characters don’t move on their own.
             </strong>
           </p>
           <div className="hero-actions">
             <button type="button" className="btn btn-primary btn-lg" onClick={() => focusById('story-input')}>
               <ArrowDown size={18} aria-hidden="true" />
-              Create Storyboard
+              Write a story
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-lg"
+              onClick={() => handleOpenDemoProject()}
+              disabled={demoLoading}
+              aria-describedby="demo-hint"
+            >
+              {demoLoading ? <LoaderCircle size={18} className="spin" aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
+              {demoLoading ? 'Loading demo…' : 'Open the demo project'}
             </button>
           </div>
+          <p id="demo-hint" className="sr-only">
+            Loads a six-scene sample storyboard with images, replacing the current project.
+          </p>
           <ul className="hero-points" aria-label="Highlights">
             <li><Check size={15} aria-hidden="true" />No sign-in</li>
             <li><Check size={15} aria-hidden="true" />Runs in your browser</li>
@@ -462,17 +575,20 @@ export default function App() {
             videoPanel={
               <Suspense
                 fallback={
-                  <p className="muted small" role="status">
-                    Loading the video maker…
-                  </p>
+                  <div className="panel-loading" role="status">
+                    <LoaderCircle size={20} className="spin" aria-hidden="true" />
+                    <span>Loading the video maker…</span>
+                  </div>
                 }
               >
-                <VideoStudio board={board} onVideoChange={handleVideoChange} />
+                <ErrorBoundary label="The video maker">
+                  <VideoStudio board={board} onVideoChange={handleVideoChange} />
+                </ErrorBoundary>
               </Suspense>
             }
           />
         ) : (
-          <EmptyState onImport={openImport} />
+          <EmptyState onImport={openImport} onOpenDemo={() => handleOpenDemoProject()} demoLoading={demoLoading} />
         )}
       </main>
 
@@ -481,11 +597,11 @@ export default function App() {
           <p>
             <ShieldCheck size={18} aria-hidden="true" />
             <span>
-              <strong>Privacy:</strong> your story, images and audio are processed entirely in this browser, and
-              videos are rendered on your device. There is no backend, no account and no tracking. Projects, images and
-              audio are saved in this browser’s storage — clearing browser data erases them, so export JSON backups and
-              keep your original files. If you turn on optional AI images, only the scene image prompts are sent to
-              Pollinations, a third-party service, when you click Generate.
+              <strong>Privacy:</strong> your story, images and audio are processed in this browser and videos are
+              rendered on your device. There is no StoryMotion server and no account. Projects, images and audio are
+              saved in this browser’s storage, so clearing browser data erases them; export JSON backups and keep your
+              original files. If you turn on optional AI images, each scene’s image prompt is sent to Pollinations, a
+              third-party service, when you click Generate. <a href="/privacy/">Read the privacy notice</a>.
             </span>
           </p>
           <p className="small">
@@ -493,6 +609,17 @@ export default function App() {
             still-image videos in your browser. It does not generate AI video or character motion. External tools such
             as Runway, Kling or Pollinations have their own terms, limits and charges.
           </p>
+          <nav className="footer-links" aria-label="Footer">
+            <a href="/">Home</a>
+            <a href="/privacy/">Privacy notice</a>
+            <a href="/terms/">Terms of use</a>
+            {SITE.feedbackFormUrl && (
+              <a href={SITE.feedbackFormUrl} target="_blank" rel="noopener noreferrer">
+                Send feedback<span className="sr-only"> (opens a Google Form in a new tab)</span>
+              </a>
+            )}
+            {SITE.version && <span>v{SITE.version} beta</span>}
+          </nav>
         </div>
       </footer>
 
@@ -506,16 +633,12 @@ export default function App() {
         onChange={handleImportFile}
       />
 
+      {/* Two always-present live regions: errors/warnings interrupt, everything else waits its turn. */}
       <div className="toast-region" aria-live="polite" aria-atomic="true">
-        {toast && (
-          <div key={toast.id} className={`toast toast-${toast.type}`}>
-            <ToastIcon size={18} aria-hidden="true" />
-            <p>{toast.text}</p>
-            <button type="button" className="toast-close" onClick={() => setToast(null)} aria-label="Dismiss message">
-              <X size={16} aria-hidden="true" />
-            </button>
-          </div>
-        )}
+        {toast && !urgentToast && toastNode}
+      </div>
+      <div className="toast-region" role="alert" aria-live="assertive" aria-atomic="true">
+        {urgentToast && toastNode}
       </div>
     </AnnounceContext.Provider>
   );

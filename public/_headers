@@ -1,6 +1,16 @@
+# Security headers for every response (Cloudflare Workers static assets and Pages both read this file).
+# script-src / connect-src allow Cloudflare Web Analytics (only loaded when CF_ANALYTICS_TOKEN is set)
+# and Pollinations (only contacted after the user turns on optional AI images).
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://gen.pollinations.ai; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://gen.pollinations.ai https://cloudflareinsights.com; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+# Hashed build files never change: cache them for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/demo/*
+  Cache-Control: public, max-age=604800

@@ -13,10 +13,14 @@ export a finished video, rendered on your own device.
 >
 > Storyboards are written by rules and templates, not by an AI model.
 
-- ₹0 to run: no paid APIs, no backend, no database, no accounts, no analytics, no server-side rendering.
+- ₹0 to run: no paid APIs, no backend, no database, no accounts, no server-side rendering.
 - Everything runs in the browser. Projects are saved to `localStorage`; images and audio to IndexedDB (also local).
 - Optional AI images use **your own free Pollinations key**. They are off by default and only send image prompts.
-- Deploys as a static site to the Cloudflare Pages free tier.
+- Optional, cookieless Cloudflare Web Analytics and a Google Form feedback link, both switched on by build variables.
+- Deploys as static files on the Cloudflare Workers free plan (`wrangler.jsonc`); the same `dist` folder also works on Cloudflare Pages.
+
+**Pages:** `/` landing page · `/app/` the studio · `/privacy/` privacy notice · `/terms/` beta terms of use.
+First-time visitors can open **`/app/?demo=1`**, a six-scene demo project with sample images already attached.
 
 ---
 
@@ -106,9 +110,10 @@ Try it fast: click **Demo: one-line test** or **Demo: detailed beats**, then **G
 ### 4. Tests and production build
 
 ```powershell
-npm test          # 50 unit tests (engine, timing, JSON, video plan, captions, audio sync, AI image client)
-npm run build     # production build into the dist folder
-npm run preview   # serve the production build at http://localhost:4173
+npm test            # 60 unit tests (engine, timing, JSON, video plan, captions, audio, AI client, demo, site build)
+npm run build       # production build into the dist folder
+npm run preview     # serve the production build at http://localhost:4173
+npm run preview:cf  # build, then serve dist exactly as Cloudflare Workers does, at http://127.0.0.1:8787
 ```
 
 ### Test on your phone (same Wi-Fi)
@@ -186,66 +191,134 @@ If your GitHub repository was created with a README or license, run this before 
 git pull origin main --allow-unrelated-histories
 ```
 
-## Deploy free on Cloudflare Pages
+## Public beta launch setup
 
-1. Sign in at https://dash.cloudflare.com (free account, no card needed for Pages).
-2. Go to **Workers & Pages → Create → Pages → Connect to Git**, and authorize GitHub.
-3. Pick `mehtasumti/storymotion-studio`.
-4. Settings:
-   - Framework preset: **Vite** (or None)
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-   - Production branch: `main`
-   - Environment variable (optional): `NODE_VERSION` = `22`
-5. Click **Save and Deploy**. Your site appears at `https://<project-name>.pages.dev`.
-6. Every `git push` to `main` redeploys automatically.
+### 1. Configure the site (all optional, all free)
 
-`public/_headers` adds security headers (Content-Security-Policy, no framing, no camera/mic/location) on Cloudflare
-Pages. Use Cloudflare Pages rather than GitHub Pages for this site.
+Settings live in `site.config.js`. Each can be overridden by a build variable, so you don't have to commit them.
+Leave a value empty to switch the feature off: the button, script and privacy-notice section are then left out of the
+build, and the privacy notice says so. The build stops with a clear message if a value is malformed.
 
-After deploying, check: generate a storyboard, edit a field and reload, export and re-import JSON, export PDF, and
-open the site on your phone.
+| Build variable | What it does | Where to get it |
+|---|---|---|
+| `SITE_URL` | Canonical URLs, Open Graph tags, `robots.txt`, `sitemap.xml`. Default: `https://storymotion-studio.sumti-mehta-01.workers.dev` | Change it if you add a custom domain |
+| `FEEDBACK_FORM_URL` | Shows **Send feedback** in the header, footer, FAQ and studio | Google Forms → your form → **Send** → link icon → copy (`https://forms.gle/…`). Only Google Forms links are accepted |
+| `CF_ANALYTICS_TOKEN` | Adds the Cloudflare Web Analytics beacon to every page | See step 2 |
+| `CONTACT_EMAIL` | Adds a contact line to the privacy notice and terms | Your address |
 
----
+For local builds, copy `.env.example` to `.env`. On Cloudflare, add them under **Workers & Pages →
+storymotion-studio → Settings → Build → Variables and secrets**, then redeploy. These are build-time values: changing
+them needs a new build.
+
+**Feedback form tips:** in Google Forms, turn off "Collect email addresses" and "Limit to 1 response" (that one
+forces a Google sign-in) unless you need them. Add a question such as "What were you trying to do?" and an optional
+"Browser and device". If you collect e-mail addresses, update the feedback section of `privacy/index.html`.
+
+### 2. Cloudflare Web Analytics (free, no cookies)
+
+`*.workers.dev` hostnames aren't proxied zones, so use the JS snippet:
+
+1. Cloudflare dashboard → **Analytics & Logs → Web Analytics → Add a site**.
+2. Enter the hostname `storymotion-studio.sumti-mehta-01.workers.dev` (or your custom domain) and choose **Done**.
+3. Open **Manage site** and copy the token from the snippet: `data-cf-beacon='{"token": "<32 characters>"}'`.
+4. Set it as `CF_ANALYTICS_TOKEN` (see step 1) and redeploy.
+5. Open the site, check the page source contains `static.cloudflareinsights.com/beacon.min.js`, and data appears
+   in the dashboard after a few minutes. Ad blockers can block the beacon; the app works the same either way.
+
+The Content-Security-Policy in `public/_headers` already allows `static.cloudflareinsights.com` (script) and
+`cloudflareinsights.com` (beacon). If you ever switch to automatic injection on a proxied custom domain, don't also set the token.
+
+### 3. Deploy on Cloudflare Workers (existing Worker)
+
+The repo includes `wrangler.jsonc`, a static-assets Worker with no server code: Cloudflare serves `dist/` directly,
+redirects `/privacy` → `/privacy/`, sends unknown paths to `404.html` with a real 404 status, and applies
+`public/_headers`. `name` matches the existing Worker, `storymotion-studio`.
+
+**Automatic (Git-connected Worker):** Workers & Pages → storymotion-studio → Settings → **Build**:
+
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+- Root directory: `/` · Production branch: `main`
+- Build variable (recommended): `NODE_VERSION` = `22`, plus any variables from step 1
+
+Push to `main` and the build deploys. Pull-request branches get preview URLs if "Builds for non-production
+branches" is on.
+
+**Manual (from your PC):**
+
+```powershell
+npm ci
+npx wrangler login     # free Cloudflare account, opens the browser once
+npm run deploy         # vite build && wrangler deploy
+```
+
+**After each deploy, check:** `/`, `/app/`, `/app/?demo=1`, `/privacy/`, `/terms/`, `/robots.txt`,
+`/sitemap.xml` and a made-up URL (should show the 404 page). Generate a storyboard, export JSON/PDF, export a short
+video from the demo, and open the site on your phone.
+
+**Optional, free SEO step:** add the site to Google Search Console and Bing Webmaster Tools (verify with an HTML file or
+a meta tag) and submit `https://<your-site>/sitemap.xml`.
+
+### 4. End-to-end smoke test (optional)
+
+`e2e/smoke.py` drives a real Chromium through every page and the main flows, including a full video export (37
+checks). It needs Python 3 and `pip install playwright` then `python -m playwright install chromium`:
+
+```powershell
+npm run preview:cf          # terminal 1
+# terminal 2 (optional: set CHROMIUM_PATH=C:\path\to\chrome.exe)
+npm run test:e2e
+```
+
+### Cloudflare Pages instead
+
+The `dist` folder is plain static files, so a Pages project still works: build command `npm run build`, output
+directory `dist`. `_headers`, the 404 page and trailing-slash URLs behave the same way on Pages.
 
 ## Architecture
 
 ```text
 storymotion-studio/
+├── index.html                 landing page (static HTML, no JavaScript)
+├── app/index.html             the studio (React app entry)
+├── privacy/index.html         privacy notice (static)
+├── terms/index.html           beta terms of use (static)
+├── 404.html                   not-found page
+├── site.config.js             site URL, feedback form, analytics token, contact (overridable by env)
+├── wrangler.jsonc             Cloudflare Workers static-assets deployment
+├── build/sitePlugin.js        build step: partials, @if blocks, config, robots.txt, sitemap.xml
+├── e2e/smoke.py               Playwright end-to-end smoke test
+├── scripts/make-demo-scenes.py  regenerates the demo illustrations
 ├── public/
-│   ├── favicon.svg
-│   └── _headers               Cloudflare Pages security headers
+│   ├── _headers               security headers + caching (Workers and Pages)
+│   ├── demo/scene-1..6.webp   original sample illustrations for the demo project
+│   ├── og-image.png, favicon.*, apple-touch-icon.png, icon-*.png, site.webmanifest
 ├── src/
+│   ├── site/                  landing/legal styles (site.css) and shared partials (header, footer, head)
 │   ├── components/
 │   │   ├── video/             Video maker: VideoStudio, VideoPreview, SceneMediaRow, AudioPanel,
 │   │   │                      CaptionPanel, AiImagePanel, ExportPanel
+│   │   ├── ErrorBoundary.jsx  keeps one failing panel from blanking the app; recovers stale chunks
 │   │   ├── StoryForm.jsx      story + settings form, demo presets
-│   │   ├── Storyboard.jsx     toolbar, notices, timeline controls, scene list
+│   │   ├── Storyboard.jsx     toolbar, notices, timeline controls, workspace tabs, scene list
 │   │   ├── Timeline.jsx       proportional scene bar and total indicator
 │   │   ├── SceneCard.jsx      editable scene fields + duration control
 │   │   └── CopyButton.jsx     clipboard button with feedback
 │   ├── lib/
+│   │   ├── demoProject.js     demo project: engine-generated storyboard + sample images
 │   │   ├── storyEngine.js     validation, beat extraction, templates, timing (pure)
 │   │   ├── projectJson.js     JSON schema, import validation, export helpers
 │   │   ├── storage.js         versioned localStorage with corruption/quota handling
 │   │   ├── exportPdf.js       jsPDF multipage export (lazy-loaded)
-│   │   ├── format.js          time formatting, plain-text export, PDF-safe text
-│   │   ├── clipboard.js       Clipboard API + fallback
-│   │   ├── demoPresets.js     demo inputs only (nothing hardcoded in the engine)
-│   │   ├── video/videoModel.js   render plan: motion, transitions, caption pages, audio schedule (pure)
-│   │   ├── video/renderer.js     canvas drawing shared by preview and export
-│   │   ├── video/audioEngine.js  Web Audio scheduling (live preview + offline mix)
-│   │   ├── video/exporter.js     WebCodecs/Mediabunny export, MediaRecorder fallback, verification
-│   │   ├── video/mediaStore.js   IndexedDB storage for images/audio
-│   │   ├── video/mediaFiles.js   image/audio import, decoding and caches
-│   │   ├── video/aiImages.js     optional Pollinations client
+│   │   ├── format.js, clipboard.js, demoPresets.js
+│   │   ├── video/…            render plan, renderer, audio, exporter, media storage, AI client
 │   │   └── *.test.js          Vitest tests
-│   ├── App.jsx                state, autosave, import/export, reset
+│   ├── config.js              build-time site settings for the React app
+│   ├── App.jsx                state, autosave, import/export, demo, reset
 │   ├── App.css                dark cinematic theme
 │   └── main.jsx
-├── index.html
 ├── package.json
-└── vite.config.js
+└── vite.config.js             multi-page build
 ```
 
 **How generation works.** `generateStoryboard(settings)` in `storyEngine.js`:
@@ -286,6 +359,9 @@ contains the storyboard and video settings but **not** the image/audio files; sc
 - MP4 depends on the browser having H.264 and AAC encoders; the app hides MP4 when it can't make it.
 - Real-time recording (fallback browsers) must keep the tab visible, and can be up to one frame off at hard cuts.
 - Optional AI images depend on Pollinations' free limits, availability and terms, which can change.
+
+- The landing, privacy and terms pages are static HTML. The studio itself needs JavaScript.
+- The beta terms and privacy notice are plain-language documents, not lawyer-reviewed for any jurisdiction.
 
 - **Not AI.** The engine cannot understand the story. A one-sentence story gives mostly generic derived beats. Write
   one sentence or line per moment for specific scenes, then edit.

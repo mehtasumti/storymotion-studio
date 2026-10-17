@@ -1,0 +1,39 @@
+<footer class="sf">
+      <div class="wrap sf-inner">
+        <div class="sf-brand">
+          <a class="sh-brand" href="/">
+            <!-- @include logo -->
+            <span class="sh-name">StoryMotion <span>Studio</span></span>
+          </a>
+          <p>
+            A free storyboard and animated still-image video maker that runs in your browser. Videos are made from still
+            images with camera moves, transitions, captions and your audio. It does not generate AI video or character
+            motion.
+          </p>
+        </div>
+        <nav class="sf-links" aria-label="Footer">
+          <div>
+            <h2>Product</h2>
+            <a href="/app/">Open the studio</a>
+            <a href="/app/?demo=1">Demo project</a>
+            <a href="/#features">Features</a>
+            <a href="/#faq">FAQ</a>
+          </div>
+          <div>
+            <h2>Trust</h2>
+            <a href="/privacy/">Privacy notice</a>
+            <a href="/terms/">Terms of use</a>
+            <!-- @if feedback -->
+            <a href="{{FEEDBACK_URL}}" target="_blank" rel="noopener noreferrer">Send feedback<span class="sr-only"> (opens a Google Form in a new tab)</span></a>
+            <!-- @endif -->
+            <!-- @if contact -->
+            <a href="mailto:{{CONTACT_EMAIL}}">Contact</a>
+            <!-- @endif -->
+          </div>
+        </nav>
+      </div>
+      <div class="wrap sf-base">
+        <p>© {{YEAR}} StoryMotion Studio · v{{VERSION}} public beta</p>
+        <p>No sign-in · No paid APIs · Your work stays in your browser</p>
+      </div>
+    </footer>

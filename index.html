@@ -1,18 +1,374 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#07080f" />
+    <!-- @include head -->
+    <title>StoryMotion Studio: Free Storyboard &amp; Animated Story Video Maker</title>
     <meta
       name="description"
-      content="StoryMotion Studio turns your story into an editable, timed storyboard with image and animation prompts, then into an animated still-image video with camera moves, captions and audio. Free, in-browser, no sign-in."
+      content="Turn a written story into an editable, timed storyboard with image and animation prompts, then into an animated still-image video with camera moves, captions and audio. Free, in your browser, no sign-in."
     />
-    <title>StoryMotion Studio — Free Storyboard &amp; Video Maker</title>
+    <link rel="canonical" href="{{CANONICAL_URL}}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{CANONICAL_URL}}" />
+    <meta property="og:title" content="StoryMotion Studio: from story to storyboard to video" />
+    <meta
+      property="og:description"
+      content="Write a story, get a timed storyboard, add images and audio, and export an animated still-image video. Free, private, in your browser."
+    />
+    <meta name="twitter:title" content="StoryMotion Studio: from story to storyboard to video" />
+    <meta
+      name="twitter:description"
+      content="Write a story, get a timed storyboard, add images and audio, and export an animated still-image video. Free, private, in your browser."
+    />
+    <link rel="preload" as="image" href="/demo/scene-1.webp" type="image/webp" fetchpriority="high" />
+    <link rel="stylesheet" href="/src/site/site.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "StoryMotion Studio",
+        "url": "{{SITE_URL}}/",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any modern web browser",
+        "browserRequirements": "Requires JavaScript. Video export works best in recent Chrome, Edge or Firefox.",
+        "description": "A free, browser-based storyboard and animated still-image video maker.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" }
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <!-- @include header -->
+
+    <main id="main">
+      <!-- ============ Hero ============ -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Public beta · Free · No sign-in</p>
+            <h1 id="hero-title">
+              Your story, <em>scene by scene</em>, ready for the screen.
+            </h1>
+            <p class="lede">
+              Paste a story and StoryMotion Studio breaks it into a timed, editable storyboard with shot directions and
+              image prompts. Add a picture to each scene and it becomes a video, with camera moves, transitions,
+              captions and your own music and voice. Everything is rendered in your browser.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary btn-lg" href="/app/">
+                Start Creating
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+              <a class="btn btn-ghost btn-lg" href="/app/?demo=1">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                Open the demo project
+              </a>
+            </div>
+            <ul class="hero-points" aria-label="Highlights">
+              <li>No account needed</li>
+              <li>₹0, no paid APIs</li>
+              <li>Your work stays on your device</li>
+            </ul>
+          </div>
+
+          <div class="hero-visual">
+            <figure
+              class="reel"
+              role="img"
+              aria-label="Preview of the demo project: six illustrated still images play one after another with slow zoom and pan camera moves and a caption, the way StoryMotion videos look."
+            >
+              <div class="reel-frame">
+                <img class="slide s1" src="/demo/scene-1.webp" alt="" width="720" height="1280" fetchpriority="high" />
+                <img class="slide s2" src="/demo/scene-2.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <img class="slide s3" src="/demo/scene-3.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <img class="slide s4" src="/demo/scene-4.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <img class="slide s5" src="/demo/scene-5.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <img class="slide s6" src="/demo/scene-6.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <div class="reel-caption" aria-hidden="true">
+                  <span class="c1">A sealed envelope. No return address.</span>
+                  <span class="c2">“Come to Ravenscourt before midnight.”</span>
+                  <span class="c3">The iron gates of an abandoned mansion.</span>
+                  <span class="c4">A portrait wearing her pendant.</span>
+                  <span class="c5">“You look just like her.”</span>
+                  <span class="c6">Every candle in the hall goes out.</span>
+                </div>
+                <div class="reel-progress" aria-hidden="true"><span></span></div>
+              </div>
+            </figure>
+
+            <div class="float-card fc-scene" aria-hidden="true">
+              <p class="fc-kicker cyc"><span>Scene 1 · 0:00 to 0:05</span><span>Scene 2 · 0:05 to 0:10</span><span>Scene 3 · 0:10 to 0:15</span><span>Scene 4 · 0:15 to 0:20</span><span>Scene 5 · 0:20 to 0:25</span><span>Scene 6 · 0:25 to 0:30</span></p>
+              <p class="fc-title cyc"><span>The envelope</span><span>The letter</span><span>The iron gates</span><span>The portrait</span><span>The stranger</span><span>Lights out</span></p>
+              <dl>
+                <div><dt>Duration</dt><dd>5 s</dd></div>
+                <div><dt>Motion</dt><dd class="cyc"><span>Zoom in</span><span>Pan left</span><span>Zoom in</span><span>Tilt up</span><span>Zoom out</span><span>Cinematic drift</span></dd></div>
+                <div><dt>Transition</dt><dd>Dissolve</dd></div>
+              </dl>
+            </div>
+
+            <div class="float-card fc-export" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" focusable="false"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div>
+                <p class="fc-title">Video ready</p>
+                <p class="fc-kicker">MP4 · 1080p · 30 fps · checked</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Honesty strip ============ -->
+      <section class="truth" aria-labelledby="truth-title">
+        <div class="wrap truth-inner">
+          <h2 id="truth-title" class="sr-only">What the videos are</h2>
+          <div class="truth-item">
+            <span class="truth-label is-yes">What it does</span>
+            <p>
+              Animates <strong>your still images</strong> with zoom, pan, tilt and drift moves, plus transitions,
+              captions, music and voice.
+            </p>
+          </div>
+          <div class="truth-item">
+            <span class="truth-label is-no">What it doesn’t</span>
+            <p>
+              It does not generate AI video. Characters and objects <strong>do not move on their own</strong>, and
+              there’s no lip-sync and no generated voices.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Product explanation ============ -->
+      <section class="section" id="product" aria-labelledby="product-title">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="kicker">Two tools, one flow</p>
+            <h2 id="product-title">From words to frames to a finished video</h2>
+            <p>
+              StoryMotion Studio does the planning work of a storyboard artist and the assembly work of a video editor,
+              so you can focus on the story.
+            </p>
+          </header>
+
+          <div class="duo">
+            <article class="duo-card">
+              <div class="duo-media duo-board" aria-hidden="true">
+                <div class="mini-scene"><b>01</b><span></span><span></span><i>0:00 to 0:05</i></div>
+                <div class="mini-scene"><b>02</b><span></span><span></span><i>0:05 to 0:10</i></div>
+                <div class="mini-scene is-active"><b>03</b><span></span><span></span><i>0:10 to 0:15</i></div>
+              </div>
+              <h3>Storyboard creator</h3>
+              <p>
+                Paste your story and choose a style, genre, length and aspect ratio. You get 4 to 10 scenes, each with
+                a shot type, camera direction, image prompt, image-to-video prompt, dialogue, voiceover, music and sound
+                notes, and a transition. Durations always add up to your target length.
+              </p>
+              <p class="note">
+                Storyboards are written by rules and templates, not an AI model, so the same story always gives the
+                same result. Everything is editable.
+              </p>
+            </article>
+
+            <article class="duo-card">
+              <div class="duo-media duo-video" aria-hidden="true">
+                <img src="/demo/scene-3.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <img src="/demo/scene-4.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+                <img src="/demo/scene-5.webp" alt="" width="720" height="1280" loading="lazy" decoding="async" />
+              </div>
+              <h3>Video maker</h3>
+              <p>
+                Add one image per scene: upload your own, or optionally generate one with your own free Pollinations
+                key. StoryMotion animates each still with a camera move, follows your transitions, burns in captions,
+                mixes music, narration and dialogue, and exports WebM or MP4.
+              </p>
+              <p class="note">The preview and the exported file use the same renderer, so what you see is what you download.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Features ============ -->
+      <section class="section section-alt" id="features" aria-labelledby="features-title">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="kicker">Features</p>
+            <h2 id="features-title">Everything a short story video needs</h2>
+          </header>
+
+          <ul class="features" role="list">
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></span>
+              <h3>Timed, editable storyboard</h3>
+              <p>4, 6, 8 or 10 scenes over 30, 60 or 90 seconds. Edit any field. Lock the total and the other scenes rebalance automatically.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m17 15 2 2 3-4"/></svg></span>
+              <h3>Ready-to-use prompts</h3>
+              <p>Image prompts and image-to-video prompts for every scene, with a shared character description to keep people consistent.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 10l5-3v10l-5-3"/><rect x="2" y="6" width="13" height="12" rx="2"/></svg></span>
+              <h3>Camera moves on stills</h3>
+              <p>Zoom in or out, pan, tilt, cinematic drift or static. “Auto” reads each scene’s camera direction. Pans never show empty edges.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 14h4M12 14h6M6 10h12"/></svg></span>
+              <h3>Captions that fit</h3>
+              <p>Built from dialogue or voiceover. Choose size, position, style and colour. Long lines are split into readable two-line pages.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+              <h3>Music, narration &amp; dialogue</h3>
+              <p>Background music with fades and looping, voice clips per scene, separate levels, automatic ducking and a limiter to prevent clipping.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></span>
+              <h3>Your images, or optional AI</h3>
+              <p>Drag and drop, swap or batch-add images. Optional AI images use your own free Pollinations key. It’s off by default and only image prompts are sent.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span>
+              <h3>Verified exports</h3>
+              <p>WebM or MP4 at 720p or 1080p, plus PDF storyboards and JSON backups. Each video is checked before you download it.</p>
+            </li>
+            <li class="feature">
+              <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+              <h3>Private by design</h3>
+              <p>No account and no backend. Your story, images and audio are saved in your own browser and never uploaded by StoryMotion.</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ How it works ============ -->
+      <section class="section" id="how-it-works" aria-labelledby="how-title">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="kicker">How it works</p>
+            <h2 id="how-title">Four steps, a few minutes</h2>
+          </header>
+          <ol class="steps" role="list">
+            <li class="step">
+              <span class="step-num" aria-hidden="true">1</span>
+              <h3>Write or paste your story</h3>
+              <p>One sentence or line per moment works best. Add a character description to keep looks consistent.</p>
+            </li>
+            <li class="step">
+              <span class="step-num" aria-hidden="true">2</span>
+              <h3>Generate the storyboard</h3>
+              <p>Pick style, genre, scene count, length and 9:16 or 16:9. Then edit, copy or export it as PDF or JSON.</p>
+            </li>
+            <li class="step">
+              <span class="step-num" aria-hidden="true">3</span>
+              <h3>Add images and audio</h3>
+              <p>Upload one image per scene, add music and voice clips, then adjust camera moves and captions.</p>
+            </li>
+            <li class="step">
+              <span class="step-num" aria-hidden="true">4</span>
+              <h3>Preview and export</h3>
+              <p>Play it back with audio in sync, then render WebM or MP4 on your own device and download it.</p>
+            </li>
+          </ol>
+          <div class="specs" aria-label="Specifications">
+            <div><strong>4 to 10</strong><span>scenes</span></div>
+            <div><strong>30 / 60 / 90 s</strong><span>target length</span></div>
+            <div><strong>9:16 · 16:9</strong><span>vertical or wide</span></div>
+            <div><strong>720p · 1080p</strong><span>WebM or MP4</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FAQ ============ -->
+      <section class="section section-alt" id="faq" aria-labelledby="faq-title">
+        <div class="wrap faq-wrap">
+          <header class="section-head">
+            <p class="kicker">FAQ</p>
+            <h2 id="faq-title">Questions, answered honestly</h2>
+          </header>
+          <div class="faq">
+            <details>
+              <summary>Is StoryMotion Studio really free?</summary>
+              <p>
+                Yes. There’s no account, subscription or paid API behind it. The only optional outside service is
+                Pollinations for AI images, which uses a key from your own free Pollinations account. Their free limits
+                and terms are set by them and can change.
+              </p>
+            </details>
+            <details>
+              <summary>Does it create AI-generated video?</summary>
+              <p>
+                No. Each scene is one still image with a camera move (zoom, pan, tilt or drift), plus transitions,
+                captions and your audio. Characters and objects don’t move on their own. If you want true AI motion, the
+                storyboard includes image-to-video prompts you can paste into separate tools, which have their own
+                pricing.
+              </p>
+            </details>
+            <details>
+              <summary>Is the storyboard written by AI?</summary>
+              <p>
+                No. A rule-and-template engine splits your story into beats and writes shot directions and prompts. It
+                never invents dialogue. Short stories are padded with clearly labelled “derived” beats, and you can edit
+                everything.
+              </p>
+            </details>
+            <details>
+              <summary>Where is my work saved?</summary>
+              <p>
+                In your own browser: the project in local storage, and images and audio in IndexedDB. Nothing is
+                uploaded to a StoryMotion server, because there isn’t one. Clearing your browser data erases it, so use
+                <em>Export JSON</em> for backups and keep your original media files.
+              </p>
+            </details>
+            <details>
+              <summary>Can I try it without writing a story?</summary>
+              <p>
+                Yes. <a href="/app/?demo=1">Open the demo project</a> to load a six-scene mystery with illustrated
+                images already in place. You can play it, change camera moves and captions, and export a video straight
+                away.
+              </p>
+            </details>
+            <details>
+              <summary>Which browsers can export video?</summary>
+              <p>
+                Recent desktop Chrome and Edge export WebM and usually MP4, faster than real time. Firefox exports WebM,
+                and MP4 if your system has the right encoders. Safari support depends on the version. The app tests your
+                browser and only offers formats that work. Phones work too, but 720p is recommended.
+              </p>
+            </details>
+            <details>
+              <summary>Who owns the videos I make?</summary>
+              <p>
+                You keep your rights to your story and media. You’re responsible for having the rights to any images
+                and music you add, and for following the terms of any outside tools you use. See the
+                <a href="/terms/">terms of use</a>.
+              </p>
+            </details>
+            <details>
+              <summary>What does “beta” mean here?</summary>
+              <p>
+                The app is new and still changing. Expect rough edges, and keep backups of anything important.
+                <!-- @if feedback -->Your <a href="{{FEEDBACK_URL}}" target="_blank" rel="noopener noreferrer">feedback</a> shapes what comes next.<!-- @endif -->
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Final CTA ============ -->
+      <section class="final-cta" aria-labelledby="final-title">
+        <div class="wrap final-inner">
+          <h2 id="final-title">Your first storyboard is a paste away.</h2>
+          <p>No sign-up, no upload, no cost. Open the studio and start with a story, or explore the demo.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="/app/">Start Creating</a>
+            <a class="btn btn-ghost btn-lg" href="/app/?demo=1">Open the demo project</a>
+            <!-- @if feedback -->
+            <a class="btn btn-quiet btn-lg" href="{{FEEDBACK_URL}}" target="_blank" rel="noopener noreferrer">Send feedback<span class="sr-only"> (opens a Google Form in a new tab)</span></a>
+            <!-- @endif -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- @include footer -->
   </body>
 </html>

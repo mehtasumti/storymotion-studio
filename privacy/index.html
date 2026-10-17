@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- @include head -->
+    <title>Privacy Notice | StoryMotion Studio</title>
+    <meta
+      name="description"
+      content="How StoryMotion Studio handles your data: stories, images and audio stay in your browser. Covers local storage, optional Pollinations AI images, hosting, analytics and feedback."
+    />
+    <link rel="canonical" href="{{CANONICAL_URL}}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="{{CANONICAL_URL}}" />
+    <meta property="og:title" content="Privacy Notice | StoryMotion Studio" />
+    <meta property="og:description" content="Your stories, images and audio stay in your browser. Here is exactly what is stored, and what is sent where." />
+    <meta name="twitter:title" content="Privacy Notice | StoryMotion Studio" />
+    <meta name="twitter:description" content="Your stories, images and audio stay in your browser. Here is exactly what is stored, and what is sent where." />
+    <link rel="stylesheet" href="/src/site/site.css" />
+  </head>
+  <body>
+    <!-- @include header -->
+
+    <main id="main">
+      <header class="doc-hero">
+        <div class="wrap">
+          <p class="kicker">Privacy</p>
+          <h1>Privacy notice</h1>
+          <p class="lede">
+            StoryMotion Studio is built to work without collecting your creative work. This notice describes what the
+            app actually does, based on its current code, in plain language.
+          </p>
+          <div class="doc-meta">
+            <span>Last updated: {{LEGAL_LAST_UPDATED}}</span>
+            <span>Applies to v{{VERSION}} (public beta)</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="wrap doc-layout">
+        <nav class="toc" aria-label="On this page">
+          <h2>On this page</h2>
+          <ol>
+            <li><a href="#summary">Summary</a></li>
+            <li><a href="#local">What’s stored in your browser</a></li>
+            <li><a href="#media">Images and audio you add</a></li>
+            <li><a href="#ai">Optional AI images</a></li>
+            <li><a href="#hosting">Hosting</a></li>
+            <li><a href="#analytics">Analytics</a></li>
+            <li><a href="#feedback">Feedback</a></li>
+            <li><a href="#not">What we don’t do</a></li>
+            <li><a href="#delete">Deleting your data</a></li>
+            <li><a href="#security">Security tips</a></li>
+            <li><a href="#changes">Changes and contact</a></li>
+          </ol>
+        </nav>
+
+        <article class="doc">
+          <section class="summary-box" id="summary" aria-labelledby="summary-h">
+            <h2 id="summary-h">The short version</h2>
+            <ul>
+              <li>There are <strong>no accounts and no StoryMotion server</strong> that receives your stories, images or audio.</li>
+              <li>Your project is saved <strong>only in your browser</strong>, on your device. Videos and PDFs are rendered on your device.</li>
+              <li>
+                <strong>Optional AI images</strong> are off by default. If you turn them on and click Generate, that
+                scene’s image prompt is sent to Pollinations, a third-party service, using your own key.
+              </li>
+              <!-- @if analytics -->
+              <li><strong>Cloudflare Web Analytics</strong> counts page views without cookies. It doesn’t see what you type or upload.</li>
+              <!-- @else -->
+              <li><strong>No analytics</strong> are currently enabled on this site.</li>
+              <!-- @endif -->
+              <!-- @if feedback -->
+              <li><strong>Feedback</strong> goes through a Google Form, only if you choose to open and submit it.</li>
+              <!-- @endif -->
+            </ul>
+          </section>
+
+          <section id="local" aria-labelledby="local-h">
+            <h2 id="local-h">1. What’s stored in your browser</h2>
+            <p>
+              StoryMotion Studio is a set of static files that runs entirely in your web browser. To keep your work
+              between visits, it uses your browser’s own storage on your device. StoryMotion can’t see this storage,
+              and nothing in it is sent to us.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <caption class="sr-only">Browser storage used by StoryMotion Studio</caption>
+                <thead>
+                  <tr><th scope="col">Where</th><th scope="col">Name</th><th scope="col">What it holds</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Local storage</td>
+                    <td><code>storymotion-studio:project:v1</code></td>
+                    <td>Your story, title, character description, settings, the storyboard with your edits, and video settings (camera moves, captions, volumes). It holds references to media, not the media itself.</td>
+                  </tr>
+                  <tr>
+                    <td>Local storage</td>
+                    <td><code>storymotion-studio:project:v1:corrupt-backup</code></td>
+                    <td>Only created if a saved project can’t be read. It keeps a raw copy so your work isn’t silently lost.</td>
+                  </tr>
+                  <tr>
+                    <td>Local storage</td>
+                    <td><code>storymotion-studio:ai-prefs</code></td>
+                    <td>Whether you turned on AI images, that you accepted the notice, and your chosen model name.</td>
+                  </tr>
+                  <tr>
+                    <td>Local storage</td>
+                    <td><code>storymotion-studio:ai-key</code></td>
+                    <td>Your Pollinations key, <strong>only if you tick “Remember”</strong>. Otherwise the key is kept in memory and forgotten when you close the tab.</td>
+                  </tr>
+                  <tr>
+                    <td>IndexedDB</td>
+                    <td><code>storymotion-studio-media</code></td>
+                    <td>The images and audio files you add (and AI images you generate), stored as files on your device.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Exported files (JSON projects, PDF storyboards and videos) are created on your device and saved wherever
+              your browser saves downloads. JSON exports contain your story and storyboard but not your images or audio.
+            </p>
+          </section>
+
+          <section id="media" aria-labelledby="media-h">
+            <h2 id="media-h">2. Images and audio you add</h2>
+            <p>
+              When you upload images, music or voice recordings, the files are read, resized (very large images are
+              scaled down to 2560 pixels on the long edge) and stored in your browser’s IndexedDB. They are decoded,
+              previewed, mixed and encoded into your video <strong>on your own device</strong>. StoryMotion never uploads
+              them anywhere, and they’re never sent to Pollinations.
+            </p>
+            <p>
+              The <strong>demo project</strong> loads six sample illustrations from this website and stores copies in
+              the same local storage, so you can edit and export them like your own images.
+            </p>
+          </section>
+
+          <section id="ai" aria-labelledby="ai-h">
+            <h2 id="ai-h">3. Optional AI images (Pollinations)</h2>
+            <p>
+              The Video maker can ask <a href="https://pollinations.ai" rel="noopener noreferrer">Pollinations</a>, an
+              independent third-party image service, to draw a scene. This is <strong>off by default</strong>. It only
+              works after you tick a consent box, turn it on and paste a key from your own free Pollinations account.
+              Nothing is sent until you click <em>Generate</em>, <em>Regenerate</em> or <em>Generate missing</em>.
+            </p>
+            <h3>What is sent, per image</h3>
+            <ul>
+              <li>
+                The scene’s <strong>image prompt</strong>, up to 1,500 characters. It usually includes a sentence or
+                phrase from that scene of your story, your character description, and style, mood and lighting words.
+                You can read and edit it in the storyboard before generating.
+              </li>
+              <li>The image width and height, a number (“seed”) that keeps results repeatable, the model name if you chose one, and a “no logo” setting.</li>
+              <li>
+                Your Pollinations <strong>key</strong>, in an authorization header. If your browser blocks that request,
+                the app retries once with the key in the web address, which Pollinations supports for image requests.
+              </li>
+            </ul>
+            <p>
+              Like any website you connect to, Pollinations also receives technical information such as your IP address
+              and browser type. The app sends requests without cookies and without a referrer. Your full story, other
+              scenes’ text, uploaded images and audio are not sent.
+            </p>
+            <p>
+              The images Pollinations returns are stored only in your browser. Pollinations’ handling of prompts,
+              images and account data is governed by its own terms and privacy policy, not this notice, so please
+              review them on <a href="https://pollinations.ai" rel="noopener noreferrer">pollinations.ai</a> before
+              using the feature. <em>Turn off AI images</em> in the app deletes your saved key and AI settings from this
+              browser. It can’t delete anything already sent to Pollinations.
+            </p>
+          </section>
+
+          <section id="hosting" aria-labelledby="hosting-h">
+            <h2 id="hosting-h">4. Hosting</h2>
+            <p>
+              The site is served as static files by <strong>Cloudflare</strong> (Cloudflare Workers). There’s no
+              StoryMotion server code that stores visitor information. As with any website, delivering pages means
+              Cloudflare processes technical request data such as your IP address, browser user agent and the page
+              requested, to serve the site and protect it from abuse. The site owner can see aggregated traffic figures
+              in the Cloudflare dashboard. Cloudflare’s handling of this data is described in
+              <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener noreferrer">Cloudflare’s privacy policy</a>.
+            </p>
+            <p>Fonts and icons are bundled with the site, so no requests go to font or icon services.</p>
+          </section>
+
+          <section id="analytics" aria-labelledby="analytics-h">
+            <h2 id="analytics-h">5. Analytics</h2>
+            <!-- @if analytics -->
+            <p>
+              We use <strong>Cloudflare Web Analytics</strong> to understand overall usage, such as how many people
+              visit, which pages they view, where visits come from (referrer), broad device, browser and country
+              information, and page-load performance. A small script from
+              <code>static.cloudflareinsights.com</code> sends this to Cloudflare on each page view.
+            </p>
+            <p>
+              Cloudflare states that Web Analytics doesn’t use cookies or local storage to collect metrics, doesn’t
+              fingerprint visitors, and doesn’t log URL query strings. It never sees your story, storyboard, images,
+              audio or AI key, because those never leave your browser through it. Ad or tracker blockers may block the
+              script. That’s fine, and the app works the same either way.
+            </p>
+            <!-- @else -->
+            <p>
+              Analytics are <strong>not enabled</strong> on this site right now, and no analytics script is loaded. If
+              that changes, we plan to use Cloudflare Web Analytics, which works without cookies, and we’ll update this
+              section before turning it on.
+            </p>
+            <!-- @endif -->
+          </section>
+
+          <section id="feedback" aria-labelledby="feedback-h">
+            <h2 id="feedback-h">6. Feedback</h2>
+            <!-- @if feedback -->
+            <p>
+              The <em>Send feedback</em> buttons open a <strong>Google Form</strong> in a new tab. Nothing is sent
+              unless you fill it in and submit it. Whatever you submit, and any information Google collects (for
+              example if you’re signed in to a Google account, or if the form asks for an e-mail address), is handled
+              by Google under the
+              <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a> and
+              shared with the site owner as form responses.
+            </p>
+            <p>
+              Please don’t include sensitive personal information, passwords or API keys in feedback. Feedback is used
+              only to fix problems and improve StoryMotion Studio.
+            </p>
+            <!-- @else -->
+            <p>
+              A feedback form isn’t connected to this build yet. When it is, it will be a Google Form that opens only
+              when you click <em>Send feedback</em>, and this section will explain how responses are handled.
+            </p>
+            <!-- @endif -->
+          </section>
+
+          <section id="not" aria-labelledby="not-h">
+            <h2 id="not-h">7. What we don’t do</h2>
+            <ul>
+              <li>We don’t require an account, e-mail address or payment.</li>
+              <li>The app’s code doesn’t set cookies.</li>
+              <li>We don’t run advertising or ad trackers, and we don’t sell or share personal data for advertising.</li>
+              <li>We don’t upload, read or train AI models on your stories, images or audio.</li>
+            </ul>
+          </section>
+
+          <section id="delete" aria-labelledby="delete-h">
+            <h2 id="delete-h">8. Deleting your data</h2>
+            <p>Your data is on your device, so you’re in control:</p>
+            <ul>
+              <li><strong>Reset</strong> in the storyboard toolbar clears your story, storyboard, images, audio and AI settings from this browser.</li>
+              <li><strong>Turn off AI images</strong> removes your saved Pollinations key and AI preferences.</li>
+              <li>Clearing site data for this website in your browser settings removes everything StoryMotion stored.</li>
+            </ul>
+            <p>Deleted local data can’t be recovered by us, because we never had a copy. Export a JSON backup first if you want to keep your work.</p>
+          </section>
+
+          <section id="security" aria-labelledby="security-h">
+            <h2 id="security-h">9. Security tips</h2>
+            <ul>
+              <li>Anyone with access to your browser profile can open your saved project. Use Reset on shared or public computers.</li>
+              <li>If you tick “Remember” for your Pollinations key, it’s stored unencrypted in this browser’s local storage. Leave it unticked on shared devices, and revoke the key in your Pollinations account if you think it was exposed.</li>
+              <li>Private or incognito windows may block storage, in which case your work disappears when you close the window.</li>
+            </ul>
+          </section>
+
+          <section id="changes" aria-labelledby="changes-h">
+            <h2 id="changes-h">10. Changes and contact</h2>
+            <p>
+              StoryMotion Studio is in public beta and this notice may change as the app changes. We’ll update the date
+              at the top when it does, and we won’t start sending your creative work anywhere new without saying so here
+              first.
+            </p>
+            <!-- @if contact -->
+            <p>Questions about privacy? E-mail <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.</p>
+            <!-- @else -->
+            <!-- @if feedback -->
+            <p>Questions about privacy? Ask through the <a href="{{FEEDBACK_URL}}" target="_blank" rel="noopener noreferrer">feedback form</a>.</p>
+            <!-- @endif -->
+            <!-- @endif -->
+            <p class="callout"><span>This notice is a plain-language description of how the software works. It isn’t legal advice, and it doesn’t claim that the service has been reviewed for compliance with any particular privacy law.</span></p>
+          </section>
+        </article>
+      </div>
+    </main>
+
+    <!-- @include footer -->
+  </body>
+</html>

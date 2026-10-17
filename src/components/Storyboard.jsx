@@ -46,6 +46,21 @@ export default function Storyboard({
     el.focus({ preventScroll: true });
   }
 
+  // WAI-ARIA tabs: arrow keys / Home / End move between the two workspace tabs.
+  function onTabKeyDown(event) {
+    const order = ['storyboard', 'video'];
+    const i = order.indexOf(view);
+    let next = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = order[(i + 1) % order.length];
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = order[(i - 1 + order.length) % order.length];
+    else if (event.key === 'Home') next = order[0];
+    else if (event.key === 'End') next = order[order.length - 1];
+    if (!next) return;
+    event.preventDefault();
+    onViewChange?.(next);
+    requestAnimationFrame(() => document.getElementById(`tab-${next}`)?.focus());
+  }
+
   const savedTime = saveInfo.at
     ? new Date(saveInfo.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : null;
@@ -95,9 +110,13 @@ export default function Storyboard({
         <button
           type="button"
           role="tab"
+          id="tab-storyboard"
           aria-selected={view === 'storyboard'}
+          aria-controls="workspace-panel"
+          tabIndex={view === 'storyboard' ? 0 : -1}
           className={`view-tab${view === 'storyboard' ? ' is-active' : ''}`}
           onClick={() => onViewChange?.('storyboard')}
+          onKeyDown={onTabKeyDown}
         >
           <Clapperboard size={16} aria-hidden="true" />
           Storyboard
@@ -105,9 +124,13 @@ export default function Storyboard({
         <button
           type="button"
           role="tab"
+          id="tab-video"
           aria-selected={view === 'video'}
+          aria-controls="workspace-panel"
+          tabIndex={view === 'video' ? 0 : -1}
           className={`view-tab${view === 'video' ? ' is-active' : ''}`}
           onClick={() => onViewChange?.('video')}
+          onKeyDown={onTabKeyDown}
           data-testid="tab-video"
         >
           <Film size={16} aria-hidden="true" />
@@ -125,6 +148,7 @@ export default function Storyboard({
         </div>
       )}
 
+      <div id="workspace-panel" role="tabpanel" aria-labelledby={view === 'video' ? 'tab-video' : 'tab-storyboard'}>
       {view === 'video' ? (
         videoPanel
       ) : (
@@ -194,6 +218,7 @@ export default function Storyboard({
       </ol>
         </>
       )}
+      </div>
     </section>
   );
 }

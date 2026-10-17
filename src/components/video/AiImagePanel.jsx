@@ -24,9 +24,12 @@ export default function AiImagePanel({ ai, missingCount, sceneCount, batch, onEn
                 <strong>Before you turn this on:</strong>
               </p>
               <ul className="tight-list">
-                <li>Each scene’s image prompt (including your character descriptions) is sent to {AI_PROVIDER.name}’s servers. Your story, audio and other images are not sent.</li>
+                <li>Each scene’s image prompt is sent to {AI_PROVIDER.name}’s servers. It usually contains that scene’s line from your story and your character descriptions; you can edit it first. The rest of your story, your audio and your uploaded images are not sent.</li>
                 <li>{AI_PROVIDER.name} needs a key from a free account you create yourself. Free use is limited; check their site for current limits and terms.</li>
-                <li>StoryMotion never charges you and has no server. Your key stays on this device.</li>
+                <li>StoryMotion never charges you and has no server. Your key is sent only to {AI_PROVIDER.name}, with each request, and is saved on this device only if you tick “Remember”.</li>
+                <li>
+                  Details: <a href="/privacy/#ai" target="_blank" rel="noopener">privacy notice<span className="sr-only"> (opens in a new tab)</span></a>.
+                </li>
               </ul>
             </div>
           </div>

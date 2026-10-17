@@ -131,7 +131,7 @@ export default function StoryForm({ form, errors, generating, onChange, onSubmit
               required
             />
             <p id="story-hint" className="field-hint">
-              Text inside "double quotes" is kept as dialogue. Your story never leaves your browser.
+              Text inside "double quotes" is kept as dialogue. Your story is saved only in this browser.
             </p>
             <FieldError id="story-error" message={errors.story} />
           </div>
